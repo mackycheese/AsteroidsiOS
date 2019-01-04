@@ -24,15 +24,15 @@ class GameViewController: UIViewController {
         let scene: SKScene = GameScene(size: skView!.bounds.size)
 //        scene.anchorPoint = CGPoint(x: 0.5, y: 0.5)
         
-        skView!.showsFPS=true
-        skView!.showsNodeCount=true
-        skView!.showsDrawCount=true
-        skView!.showsQuadCount=true
-        skView!.showsPhysics=true
+//        skView!.showsFPS=true
+//        skView!.showsNodeCount=true
+//        skView!.showsDrawCount=true
+//        skView!.showsQuadCount=true
+//        skView!.showsPhysics=true
         
         skView!.presentScene(scene)
     }
-
+    
     override var shouldAutorotate: Bool {
         return true
     }
