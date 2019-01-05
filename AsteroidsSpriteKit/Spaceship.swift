@@ -13,7 +13,7 @@ class Spaceship {
     
     var shapeNode: SKShapeNode!
     
-    init(size: Float, addTo: SKScene) {
+    init(size: Float, addTo: SKNode) {
         let cg_size: CGFloat = CGFloat(size)
         let points: [CGPoint] = [
             CGPoint(x: -cg_size/2, y: -cg_size),

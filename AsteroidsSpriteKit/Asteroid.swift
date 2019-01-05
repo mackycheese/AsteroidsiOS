@@ -15,8 +15,9 @@ class Asteroid {
     var size: Float!
     var numPoints: Int!
     var sharpness: Float!
-    
-    init(size: Float, numPoints: Int, sharpness: Float, addTo parent: SKScene?) {
+    var number: Int!
+    init(size: Float, numPoints: Int, sharpness: Float, addTo parent: SKNode?) {
+        self.number=1
         self.size = size
         self.numPoints = numPoints
         self.sharpness = sharpness
@@ -51,7 +52,7 @@ class Asteroid {
         }
     }
     
-    func addTo(_ parent: SKScene) {
+    func addTo(_ parent: SKNode) {
         parent.addChild(shapeNode)
     }
     
@@ -63,17 +64,20 @@ class Asteroid {
         return Float.random(in: -20...20)
     }
     
-    func split(addTo: SKScene) -> [Asteroid] {
-        let asteroid1: Asteroid = Asteroid(size: size/2, numPoints: numPoints, sharpness: sharpness/2, addTo: addTo)
-        let asteroid2: Asteroid = Asteroid(size: size/2, numPoints: numPoints, sharpness: sharpness/2, addTo: addTo)
-        
-        asteroid1.shapeNode.position = CGPoint(x: shapeNode.position.x, y: shapeNode.position.y)
-        asteroid2.shapeNode.position = CGPoint(x: shapeNode.position.x, y: shapeNode.position.y)
-        asteroid1.shapeNode.physicsBody?.velocity = CGVector(dx: CGFloat(randNewVel()), dy: CGFloat(randNewVel()))
-        asteroid2.shapeNode.physicsBody?.velocity = CGVector(dx: CGFloat(randNewVel()), dy: CGFloat(randNewVel()))
-        
-        return [asteroid1, asteroid2]
-    }
+//    func split(addTo: SKScene) -> [Asteroid] {
+//        let asteroid1: Asteroid = Asteroid(size: size/2, numPoints: numPoints, sharpness: sharpness/2, addTo: addTo)
+//        let asteroid2: Asteroid = Asteroid(size: size/2, numPoints: numPoints, sharpness: sharpness/2, addTo: addTo)
+//        
+//        asteroid1.shapeNode.position = CGPoint(x: shapeNode.position.x, y: shapeNode.position.y)
+//        asteroid2.shapeNode.position = CGPoint(x: shapeNode.position.x, y: shapeNode.position.y)
+//        asteroid1.shapeNode.physicsBody?.velocity = CGVector(dx: CGFloat(randNewVel()), dy: CGFloat(randNewVel()))
+//        asteroid2.shapeNode.physicsBody?.velocity = CGVector(dx: CGFloat(randNewVel()), dy: CGFloat(randNewVel()))
+//        
+//        asteroid1.number=number+1
+//        asteroid2.number=number+1
+//        
+//        return [asteroid1, asteroid2]
+//    }
     
     func update(){
         let cgWidth=UIScreen.main.bounds.width

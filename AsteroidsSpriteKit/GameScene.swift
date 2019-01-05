@@ -10,7 +10,9 @@ import Foundation
 import SpriteKit
 import CoreMotion
 import UIKit
+import AVFoundation
 
+//MARK: Add levels, gets more difficult as you progress, powerups, health, max # of collisions allowed with asteroids
 class GameScene: SKScene, SKPhysicsContactDelegate {
     
     var motionManager: CMMotionManager!
@@ -23,18 +25,36 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     var hapticHeavy: UIImpactFeedbackGenerator!
     var hapticMedium: UIImpactFeedbackGenerator!
     var hapticLight: UIImpactFeedbackGenerator!
+
+    var health: Float = 1
+    
+    var hudHealth: HUDBar!
     
     let asteroidSize: Float = 50
     let asteroidSharpness: Float = 20
     
+    var soundFire: Data!
+    var soundBangLarge: Data!
+    var soundBangMedium: Data!
+    var soundBangSmall: Data!
+    
+    var curBeat: Int = 0
+    
     override func sceneDidLoad() {
+        
+        soundFire = getData(soundName: "fire")
+        soundBangLarge = getData(soundName: "bangLarge")
+        soundBangMedium = getData(soundName: "bangMedium")
+        soundBangSmall = getData(soundName: "bangSmall")
+
+
         physicsWorld.gravity=CGVector(dx: 0, dy: 0)
-        physicsWorld.speed=2
+        physicsWorld.speed=3
         
 //        backgroundColor = UIColor(red: 0, green: 0, blue: 0, alpha: 1)
 
-        for _ in 0..<10{
-            let a: Asteroid=Asteroid(size:asteroidSize,numPoints:9,sharpness:asteroidSharpness,addTo:self)
+        for _ in 0..<5{
+            let a: Asteroid=Asteroid(size:asteroidSize,numPoints:20,sharpness:asteroidSharpness,addTo:self)
             a.shapeNode.position=CGPoint(x: CGFloat.random(in: 0..<UIScreen.main.bounds.width), y: CGFloat.random(in:0..<UIScreen.main.bounds.height))
             asteroids.append(a)
         }
@@ -42,6 +62,8 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         hapticHeavy = UIImpactFeedbackGenerator(style: .heavy)
         hapticMedium = UIImpactFeedbackGenerator(style: .medium)
         hapticLight = UIImpactFeedbackGenerator(style: .light)
+        
+        hudHealth = HUDBar(x: 0, y: Float(UIScreen.main.bounds.height)-20, width: Float(UIScreen.main.bounds.width), height: 20, red: 0, green: 1, blue: 0, addTo: self)
 
 //        let border = SKPhysicsBody(edgeLoopFrom: frame)
 //        border.friction=0
@@ -64,8 +86,14 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
 
     }
     
+    var fireCounter: Int = 0
+    
     override func touchesBegan(_ touches: Set<UITouch>, with event: UIEvent?) {
 //        print("touches began")
+        if fireCounter < 7 {
+            return
+        }
+        fireCounter = 0
         let bullet: Bullet = Bullet(length: 10, height: 2, addTo: self)
         bullet.shapeNode.position = player.shapeNode.position
         
@@ -74,9 +102,12 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         let len: Float = sqrt(velX*velX+velY*velY)
         velX/=len
         velY/=len
-        bullet.shapeNode.physicsBody?.velocity=CGVector(dx: CGFloat(velX*80), dy: CGFloat(velY*80))
+        bullet.shapeNode.physicsBody?.velocity=CGVector(dx: CGFloat(velX*500), dy: CGFloat(velY*500))
         bullet.shapeNode.zRotation = CGFloat(player.getAngle())
         bullets.append(bullet)
+        
+//        soundFire.play()
+        playSound(withData: soundFire)
     }
     
     override func touchesMoved(_ touches: Set<UITouch>, with event: UIEvent?) {
@@ -88,7 +119,6 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         let bodyB: SKPhysicsBody = contact.bodyB
         let categoryA: UInt32 = bodyA.categoryBitMask
         let categoryB: UInt32 = bodyB.categoryBitMask
-        
         
         var bullet: Bullet! = nil
         
@@ -106,21 +136,30 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
                 bullet.dieSoon()
             }
         }
+        
+        var asteroid: Asteroid! = nil
+        
+        
+        if categoryA == categoryAsteroid {
+            asteroid = findAsteroid(withBody: bodyA)
+        }
+        
+        if categoryB == categoryAsteroid {
+            asteroid = findAsteroid(withBody: bodyB)
+        }
+        
+        
+        
+        if (categoryA == categoryPlayer || categoryB == categoryPlayer) && asteroid != nil {
+            health-=0.05/Float(asteroid.number)
+        }
+        
         if categoryA == categoryAsteroid || categoryB == categoryAsteroid {
-            var asteroid: Asteroid! = nil
-            
-            if categoryA == categoryAsteroid {
-                asteroid = findAsteroid(withBody: bodyA)
-            }
-            
-            if categoryB == categoryAsteroid {
-                asteroid = findAsteroid(withBody: bodyB)
-            }
-            
             if asteroid != nil && bullet != nil {
                 if asteroid.canSplit() {
                     for _ in 0..<2 {
                         let new=Asteroid(size: asteroid.size/2,numPoints:asteroid.numPoints,sharpness:asteroid.sharpness/2,addTo:nil)
+                        new.number=asteroid.number+1
                         new.shapeNode.position=asteroid.shapeNode.position
                         new.addTo(self)
                         asteroids.append(new)
@@ -145,14 +184,17 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
                 }
                 asteroid.shapeNode.removeFromParent()
                 asteroids=asteroids.filter { $0 !== asteroid! }
-                if asteroid.size == asteroidSize {
-                    hapticHeavy.impactOccurred()
+                if asteroid.number >= 1 {
+//                    hapticHeavy.impactOccurred()
+                    playSound(withData: soundBangLarge, volume: 9)
                 }
-                if asteroid.size == asteroidSize / 2 {
-                    hapticMedium.impactOccurred()
+                if asteroid.number == 2 {
+//                    hapticMedium.impactOccurred()
+                    playSound(withData: soundBangMedium, volume: 4)
                 }
-                if asteroid.size == asteroidSize / 4 {
-                    hapticLight.impactOccurred()
+                if asteroid.number > 2 {
+//                    hapticLight.impactOccurred()
+                    playSound(withData: soundBangSmall, volume: 1)
                 }
             }
         }
@@ -177,8 +219,28 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     }
     
     var pastTime: TimeInterval! = nil
+    var frameCounter: Int = 0
     
     override func update(_ currentTime: TimeInterval) {
+        frameCounter += 1
+        fireCounter += 1
+        remOverSounds()
+        
+        if health < 0 {
+            let transition = SKTransition.fade(withDuration: 1)
+            let nextScene = GameOverScene(size: scene!.size)
+            nextScene.scaleMode = .aspectFill
+            scene?.view?.presentScene(nextScene, transition: transition)
+        }
+        
+        if asteroids.count <= 0 {
+            let transition = SKTransition.fade(withDuration: 1)
+            let nextScene = GameWonScene(size: scene!.size)
+            nextScene.scaleMode = .aspectFill
+            scene?.view?.presentScene(nextScene, transition: transition)
+        }
+        
+        hudHealth.setAmount(perc: health)
         var diffTime: TimeInterval! = 0
         if pastTime == nil {
             pastTime = currentTime
@@ -195,8 +257,9 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
 
         let data=motionManager.accelerometerData
         if data != nil {
-            physicsWorld.gravity.dx=20*CGFloat((data?.acceleration.x)!*diffTime)
-            physicsWorld.gravity.dy=20*CGFloat((data?.acceleration.y)!*diffTime)
+            let diff: Double=1.0/60.0
+            physicsWorld.gravity.dx=20*CGFloat((data?.acceleration.x)!*diff)
+            physicsWorld.gravity.dy=20*CGFloat((data?.acceleration.y)!*diff)
         }
         
         player.update()

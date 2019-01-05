@@ -13,7 +13,7 @@ class Bullet {
     var shapeNode: SKShapeNode!
     var life: Int = 0
     
-    init(length: Float, height: Float, addTo: SKScene) {
+    init(length: Float, height: Float, addTo: SKNode) {
         let points: [CGPoint] = [
             CGPoint(x: 0, y: 0),
             CGPoint(x: CGFloat(height), y: 0),
@@ -40,7 +40,7 @@ class Bullet {
         shapeNode.physicsBody?.collisionBitMask = collisionBullet
         shapeNode.physicsBody?.mass = 0.005
         addTo.addChild(shapeNode)
-        life = 300
+        life = 50
     }
     
     func dieSoon() {
