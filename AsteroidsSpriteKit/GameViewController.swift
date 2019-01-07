@@ -20,8 +20,6 @@ class GameViewController: UIViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
         
-        
-        
         let skView = view as? SKView
         
         let scene: SKScene = GameStartScene(size: skView!.bounds.size)
